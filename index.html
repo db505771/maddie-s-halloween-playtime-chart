@@ -20,7 +20,7 @@
       overflow-x: hidden;
     }
     body {
-      color: white;
+      color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       text-align: center;
       -webkit-tap-highlight-color: transparent;
@@ -28,7 +28,6 @@
     .totals {
       padding: 20px 10px 10px;
     }
-    /* All time headings are white */
     .totals h2 {
       margin: 0;
       color: #ffffff;
@@ -36,10 +35,10 @@
       font-weight: 650;
       letter-spacing: -0.4px;
     }
-    /* Total time is white */
+    /* Soft grey time amount */
     .totals p {
       margin: 6px 0 0;
-      color: #ffffff;
+      color: #D0CBC7;
       font-size: 16px;
       font-weight: 500;
     }
@@ -122,8 +121,7 @@
       if (!response.ok) {
         throw new Error("Could not load Google Sheets data.");
       }
-      const rows = parseCSV(await response.text());
-      return rows.slice(1);
+      return parseCSV(await response.text()).slice(1);
     }
     function localDateKey(date) {
       const year = date.getFullYear();
@@ -250,10 +248,6 @@
       const canvas = document.getElementById("chart");
       const ctx = canvas.getContext("2d");
       if (chart) chart.destroy();
-      /*
-        Liquid-glass bar fill:
-        translucent orange with glossy highlights.
-      */
       const glassGradient = ctx.createLinearGradient(0, 0, 0, 190);
       glassGradient.addColorStop(0, "rgba(255, 213, 165, 0.43)");
       glassGradient.addColorStop(0.18, "rgba(255, 170, 100, 0.30)");
