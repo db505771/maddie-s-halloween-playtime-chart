@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Orange Playtime Tracker</title>
+  <title>Liquid Glass Playtime Tracker</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     * {
@@ -28,16 +28,18 @@
     .totals {
       padding: 20px 10px 10px;
     }
+    /* All time headings are white */
     .totals h2 {
       margin: 0;
-      color: #ffb16b;
+      color: #ffffff;
       font-size: 22px;
       font-weight: 650;
       letter-spacing: -0.4px;
     }
+    /* Total time is white */
     .totals p {
       margin: 6px 0 0;
-      color: rgba(255, 255, 255, 0.82);
+      color: #ffffff;
       font-size: 16px;
       font-weight: 500;
     }
@@ -53,14 +55,8 @@
       width: 100%;
       height: 100%;
     }
-    .swipe-hint {
-      margin: 4px 0 12px;
-      color: rgba(255, 190, 135, 0.72);
-      font-size: 11px;
-      letter-spacing: 0.3px;
-    }
     .error {
-      color: #ffb16b;
+      color: #ffbd87;
       font-size: 13px;
       padding: 12px;
     }
@@ -74,7 +70,6 @@
   <div id="chart-container">
     <canvas id="chart"></canvas>
   </div>
-  <p class="swipe-hint"></p>
   <p id="error-message" class="error" hidden></p>
   <script>
     const csvUrl =
@@ -82,17 +77,12 @@
     let chartMode = 0;
     let chart = null;
     let trackerRows = [];
-    const ORANGE = "#ff9b45";
-    const LIGHT_ORANGE = "#ffd0a0";
     function formatTime(minutes) {
       const mins = Math.max(0, Math.floor(minutes));
       const hours = Math.floor(mins / 60);
       const remainder = mins % 60;
       return `${hours}h ${remainder}m`;
     }
-    /*
-      CSV parser that handles quoted fields and commas.
-    */
     function parseCSV(text) {
       const rows = [];
       let row = [];
@@ -123,19 +113,16 @@
       }
       if (field.length || row.length) {
         row.push(field);
-        if (row.some(value => value.trim() !== "")) {
-          rows.push(row);
-        }
+        if (row.some(value => value.trim() !== "")) rows.push(row);
       }
       return rows;
     }
     async function fetchCSV(url) {
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error("Could not load the Google Sheets data.");
+        throw new Error("Could not load Google Sheets data.");
       }
-      const text = await response.text();
-      const rows = parseCSV(text);
+      const rows = parseCSV(await response.text());
       return rows.slice(1);
     }
     function localDateKey(date) {
@@ -147,15 +134,13 @@
     function parseDate(value) {
       if (!value) return null;
       const input = String(value).trim();
-      // Handle dates formatted as YYYY-MM-DD without UTC shifting.
       const match = input.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
       if (match) {
-        const date = new Date(
+        return new Date(
           Number(match[1]),
           Number(match[2]) - 1,
           Number(match[3])
         );
-        if (!Number.isNaN(date.getTime())) return date;
       }
       const date = new Date(input);
       return Number.isNaN(date.getTime()) ? null : date;
@@ -183,11 +168,6 @@
       return totals;
     }
     function getLifetimeTotal(rows) {
-      /*
-        Column C = total hours
-        Column D = total minutes
-        The latest valid total is used for the headline.
-      */
       for (let i = rows.length - 1; i >= 0; i--) {
         const hours = Number.parseInt(rows[i][2], 10);
         const minutes = Number.parseInt(rows[i][3], 10);
@@ -224,9 +204,9 @@
         for (let i = 0; i <= now.getMonth(); i++) {
           months.push(new Date(now.getFullYear(), i, 1));
         }
+        const monthTotals = Array(12).fill(0);
         const start = new Date(now.getFullYear(), 0, 1);
         const end = new Date(now.getFullYear() + 1, 0, 1);
-        const monthTotals = Array(12).fill(0);
         rows.forEach(row => {
           const date = parseDate(row[0]);
           const minutes = Number.parseInt(row[4], 10);
@@ -269,16 +249,16 @@
         formatTime(result.headlineMinutes);
       const canvas = document.getElementById("chart");
       const ctx = canvas.getContext("2d");
-      if (chart) {
-        chart.destroy();
-      }
+      if (chart) chart.destroy();
       /*
-        Warm orange gradient for the bars.
+        Liquid-glass bar fill:
+        translucent orange with glossy highlights.
       */
-      const gradient = ctx.createLinearGradient(0, 0, 0, 190);
-      gradient.addColorStop(0, "rgba(255, 184, 112, 0.98)");
-      gradient.addColorStop(0.55, "rgba(255, 133, 45, 0.90)");
-      gradient.addColorStop(1, "rgba(224, 79, 19, 0.65)");
+      const glassGradient = ctx.createLinearGradient(0, 0, 0, 190);
+      glassGradient.addColorStop(0, "rgba(255, 213, 165, 0.43)");
+      glassGradient.addColorStop(0.18, "rgba(255, 170, 100, 0.30)");
+      glassGradient.addColorStop(0.55, "rgba(255, 132, 55, 0.24)");
+      glassGradient.addColorStop(1, "rgba(255, 110, 35, 0.18)");
       chart = new Chart(ctx, {
         type: "bar",
         data: {
@@ -286,11 +266,11 @@
           datasets: [{
             label: "Minutes Played",
             data: result.values,
-            backgroundColor: gradient,
-            hoverBackgroundColor: "#ffc18a",
-            borderColor: "rgba(255, 190, 125, 0.95)",
+            backgroundColor: glassGradient,
+            hoverBackgroundColor: "rgba(255, 175, 105, 0.48)",
+            borderColor: "rgba(255, 174, 95, 0.78)",
             borderWidth: 1,
-            borderRadius: 7,
+            borderRadius: 9,
             borderSkipped: false,
             barPercentage: 0.72,
             categoryPercentage: 0.78
@@ -312,15 +292,14 @@
             },
             tooltip: {
               backgroundColor: "rgba(25, 13, 8, 0.94)",
-              titleColor: "#ffd0a0",
+              titleColor: "#ffffff",
               bodyColor: "#ffffff",
-              borderColor: "rgba(255, 155, 69, 0.6)",
+              borderColor: "rgba(255, 174, 95, 0.78)",
               borderWidth: 1,
               padding: 10,
               callbacks: {
-                label: context => {
-                  return " " + formatTime(context.raw) + " played";
-                }
+                label: context =>
+                  " " + formatTime(context.raw) + " played"
               }
             }
           },
@@ -336,7 +315,7 @@
                 display: false
               },
               ticks: {
-                color: "rgba(255, 235, 218, 0.85)",
+                color: "rgba(255, 255, 255, 0.92)",
                 font: {
                   size: 10
                 },
@@ -377,13 +356,13 @@
         if (!event.changedTouches.length) return;
         const deltaX = event.changedTouches[0].clientX - startX;
         const deltaY = event.changedTouches[0].clientY - startY;
-        // Only change views on a clear horizontal swipe.
-        if (Math.abs(deltaX) > 55 && Math.abs(deltaX) > Math.abs(deltaY)) {
-          if (deltaX < 0) {
-            chartMode = (chartMode + 1) % 3;
-          } else {
-            chartMode = (chartMode + 2) % 3;
-          }
+        if (
+          Math.abs(deltaX) > 55 &&
+          Math.abs(deltaX) > Math.abs(deltaY)
+        ) {
+          chartMode = deltaX < 0
+            ? (chartMode + 1) % 3
+            : (chartMode + 2) % 3;
           renderChart(trackerRows);
         }
       }, { passive: true });
